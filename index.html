@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Lamp Login</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+  body{background:#000;overflow:hidden;height:100vh;color:#fff}
+  
+  /* STARS */
+  .stars{position:fixed;inset:0;z-index:0}
+  .stars span{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.7;animation:twinkle 2s infinite}
+  @keyframes twinkle{0%,100%{opacity:.2}50%{opacity:1}}
+
+  .container{position:relative;z-index:2;height:100vh;display:flex;align-items:center;justify-content:center;gap:100px}
+
+  /* LAMP */
+  .lamp-area{text-align:center;position:relative}
+  .wire{width:3px;height:120px;background:#333;margin:0 auto}
+  .lamp-head{width:180px;height:90px;background:#1a1a1a;border:2px solid #333;border-radius:100px 100px 10px 10px;margin:0 auto;position:relative;z-index:3}
+  .bulb{width:36px;height:36px;background:#222;border-radius:50%;margin:2px auto;transition:.4s;position:relative;z-index:2}
+  .string{width:3px;height:100px;background:#555;margin:0 auto;cursor:grab;position:relative}
+  .string::after{content:"●";position:absolute;bottom:-18px;left:-6px;font-size:22px;color:#888}
+  .pull-text{margin-top:25px;color:#888;font-size:13px;background:#111;padding:6px 12px;border-radius:20px;display:inline-block}
+
+  /* LIGHT EFFECT */
+  .light{position:fixed;top:110px;left:50%;transform:translateX(-68%);width:600px;height:600px;background:radial-gradient(circle, rgba(0,160,255,0.35) 0%, rgba(0,160,255,0.08) 40%, transparent 70%);border-radius:50%;opacity:0;transition:.6s;pointer-events:none;z-index:1}
+  .dust{position:absolute;width:4px;height:4px;background:#aee2ff;border-radius:50%;opacity:0}
+
+  /* ON STATE */
+  body.on{background:#071426}
+  body.on .bulb{background:#ffe600;box-shadow:0 0 40px 15px #ffe600}
+  body.on .light{opacity:1}
+  body.on .lamp-head{background:#2a2a2a}
+  body.on .pull-text{background:#0d2a4a;color:#fff}
+
+  /* LOGIN BOX */
+  .login-box{width:360px;background:rgba(255,255,255,0.08);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,0.15);padding:35px;border-radius:20px;opacity:0;transform:translateX(80px);transition:.6s}
+  body.on .login-box{opacity:1;transform:translateX(0)}
+  .login-box h2{font-size:26px}
+  .login-box p{color:#aaa;font-size:14px;margin:8px 0 20px}
+  .tabs{display:flex;background:#111;border-radius:10px;padding:4px;margin-bottom:20px}
+  .tabs button{flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;background:transparent;color:#aaa}
+  .tabs button.active{background:#fff;color:#000;font-weight:700}
+  input{width:100%;padding:13px;margin-bottom:12px;border-radius:10px;border:1px solid #333;background:#111;color:#fff;outline:none}
+  input:focus{border-color:#007bff}
+  .row{display:flex;justify-content:space-between;font-size:13px;color:#aaa;margin-bottom:15px}
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;background:#007bff;color:#fff;font-weight:700;cursor:pointer;font-size:15px}
+  .btn:hover{background:#0056d6}
+  .or{text-align:center;color:#666;font-size:13px;margin:15px 0}
+  .social{display:flex;gap:10px}
+  .social button{flex:1;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#fff;cursor:pointer}
+  #msg{text-align:center;margin-top:15px;font-weight:700}
+  .success{text-align:center;display:none}
+  .success .tick{font-size:60px}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="light"></div>
+
+<div class="container">
+  <!-- LAMP SIDE -->
+  <div class="lamp-area">
+    <div class="wire"></div>
+    <div class="lamp-head"></div>
+    <div class="bulb" id="bulb"></div>
+    <div class="string" id="string"></div>
+    <div class="pull-text" id="pullText">Pull string to turn on 💡</div>
+    <div id="dustBox"></div>
+  </div>
+
+  <!-- LOGIN SIDE -->
+  <div class="login-box" id="loginBox">
+    <div id="formArea">
+      <h2>Welcome 👋</h2>
+      <p>Sign in to continue to your account</p>
+      <div class="tabs">
+        <button class="active">Sign In</button>
+        <button onclick="alert('Sign Up Clicked!')">Sign Up</button>
+      </div>
+      <input type="text" id="user" placeholder="Username / Email" value="CodeByGaurav">
+      <input type="password" id="pass" placeholder="Password" value="123456">
+      <div class="row"><label><input type="checkbox" checked style="width:auto"> Remember me</label><span>Forgot?</span></div>
+      <button class="btn" onclick="login()">Sign In →</button>
+      <div class="or">or continue with</div>
+      <div class="social"><button>G Google</button><button>GitHub</button></div>
+    </div>
+
+    <div class="success" id="successBox">
+      <div class="tick">✅</div>
+      <h2>Signed In Successfully!</h2>
+      <p>Welcome back! Your workspace is ready.</p>
+    </div>
+    <p id="msg"></p>
+  </div>
+</div>
+
+<script>
+  // STARS CREATE
+  const starsBox = document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    let s=document.createElement('span');
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=(Math.random()*2)+'s';
+    starsBox.appendChild(s);
+  }
+
+  // LAMP ON/OFF
+  const string = document.getElementById('string');
+  const pullText = document.getElementById('pullText');
+  string.addEventListener('click', ()=>{
+    document.body.classList.toggle('on');
+    let isOn = document.body.classList.contains('on');
+    pullText.innerText = isOn ? "Click again to turn off 🌙" : "Pull string to turn on 💡";
+    if(isOn) createDust();
+  });
+
+  // DUST PARTICLES
+  function createDust(){
+    const box=document.getElementById('dustBox');
+    box.innerHTML='';
+    for(let i=0;i<20;i++){
+      let d=document.createElement('div');
+      d.className='dust';
+      d.style.left=(Math.random()*200-50)+'px';
+      d.style.top=(Math.random()*200)+'px';
+      d.style.opacity=1;
+      d.style.transition='1.5s';
+      box.appendChild(d);
+      setTimeout(()=>{ d.style.transform=`translate(${Math.random()*100-50}px, ${Math.random()*100}px)`; d.style.opacity=0; },50);
+    }
+  }
+
+  // LOGIN
+  function login(){
+    let u=document.getElementById('user').value;
+    if(u.trim()==""){ document.getElementById('msg').innerText="Enter Username Bro!"; return; }
+    document.getElementById('formArea').style.display='none';
+    document.getElementById('successBox').style.display='block';
+    document.getElementById('msg').innerText="";
+  }
+</script>
+</body>
+</html>
